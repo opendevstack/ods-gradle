@@ -1,0 +1,108 @@
+= ODS Gradle Conventions Plugin
+Jan Frank <https://github.com/oalyman[@oalyman]>
+//settings:
+ifndef::env-github[:icons: font]
+ifdef::env-github[]
+:status:
+:caution-caption: :fire:
+:important-caption: :exclamation:
+:note-caption: :paperclip:
+:tip-caption: :bulb:
+:warning-caption: :warning:
+endif::[]
+
+IMPORTANT: This plugin is still WIP.
+The described functionality should work, but the plugin is not yet published to the https://plugins.gradle.org/[Gradle Plugin Portal].
+So the only way to currently use it is by a https://docs.gradle.org/current/userguide/publishing_gradle_plugins.html#custom-plugin-repositories[custom plugin repository].
+
+This Gradle plugin sets basic ODS conventions when applied to a project.
+
+It captures the required minimum of the settings to make a Gradle based build "work with ODS out of the box" as long as it is a java-ish build - that means it should work for e.g. Kotlin projects and other projects as well that depend on the Java plugin already.
+
+At this time it contains the basic settings you would otherwise have in your build script after creating the https://github.com/opendevstack/ods-quickstarters/tree/master/be-java-springboot[ODS Spring Boot Quickstarter].
+
+One of the advantages of this plugin is that in the best case you do not need to care about the specific settings and would benefit from simply updating the plugin version in case ODS changes internals.
+So in the best case it reduces the ODS specific configuration to:
+
+.example build.gradle
+[source,groovy]
+----
+plugins {
+  id 'org.opendevstack.gradle.conventions' version 'x.y.z'
+}
+----
+
+.example build.gradle.kts
+[source,kotlin]
+----
+plugins {
+  id("org.opendevstack.gradle.conventions") version "x.y.z"
+}
+----
+
+In theory, you can also apply it to any existing Gradle project and by that make it compatible with ODS or replace the existing ODS specific configuration.
+
+== Applied Conventions
+
+=== Plugins
+The following plugins are automatically applied to your project when you apply this plugin:
+
+==== Java Plugin
+The https://docs.gradle.org/current/userguide/java_plugin.html[Java Plugin] is applied to your project without further customization.
+
+==== Jacoco Plugin
+The https://docs.gradle.org/current/userguide/jacoco_plugin.html[Jacoco Plugin] is applied to your project.
+
+* The `jacocoTestReport` task of the Jacoco Plugin will be executed automatically after you run tests.
+* The `xml.required` property of the Jacoco reports will be set to `true`.
+
+=== Repository Settings
+By default, the plugin will configure a repository manager / proxy for you according to the config options table below.
+
+The repository manager will be used to configure the following maven repositories using the configured credentials:
+
+* `$nexus_url/repository/jcenter/`,
+* `$nexus_url/repository/maven-public/`,
+* `$nexus_url/repository/atlassian_public/`,
+
+.config options
+[cols="1,1"]
+|===
+|Property|Environment variable
+
+|`no_nexus`
+|`NO_NEXUS`
+
+|`nexus_url`
+|`NEXUS_URL or NEXUS_HOST`
+
+|`nexus_user`
+|`NEXUS_USERNAME`
+
+|`nexus_pw`
+|`NEXUS_PASSWORD`
+
+|`nexus_folder_releases`
+|`NEXUS_FOLDER_RELEASES`
+
+|`nexus_folder_snapshots`
+|`NEXUS_FOLDER_SNAPSHOTS`
+
+|===
+
+The settings are either picked up as a https://docs.gradle.org/current/userguide/build_environment.html#sec:project_properties[gradle project property] or as an environment variable, the latter one latest when you run your build during CI by ODS on jenkins / ods-pipelines.
+
+For configuring the settings for local development you usually would put them in the `gradle.properties` file in your https://docs.gradle.org/current/userguide/directory_layout.html#dir:gradle_user_home[Gradle user home directory] by that configuring it for all your Gradle projects to be accessible, or in the https://docs.gradle.org/current/userguide/directory_layout.html#dir:project_root[Project root directory] to keep it local to your project.
+
+.example gradle.properties with settings
+[source,properties]
+----
+# no_nexus=true # to disable repo manager
+nexus_url=https://your-nexus-instance.com/
+nexus_user=john.doe
+nexus_pw=superpassword
+nexus_folder_releases=releases
+nexus_folder_snapshots=snapshots
+----
+
+Setting the property `no_nexus` or environment variable `NO_NEXUS`, disables the use of the repository manager in effect only configuring the public https://docs.gradle.org/current/userguide/declaring_repositories.html#sub:maven_central[mavenCentral()] as your repository.
